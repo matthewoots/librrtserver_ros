@@ -1,0 +1,3 @@
+[submodule "librrtserver"]
+	path = librrtserver
+	url = https://github.com/matthewoots/librrtserver.git
