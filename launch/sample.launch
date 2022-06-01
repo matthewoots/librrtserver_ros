@@ -1,0 +1,13 @@
+<launch>
+
+<node pkg="librrtserver_ros" type="librrtserver_ros_node" name="librrtserver_ros_node" output="screen">
+  <rosparam command="load" file="$(find librrtserver_ros)/config/parameters.yaml" />
+</node>
+
+<include file="$(find librrtserver_ros)/launch/gen_mockamap.launch"/>
+
+<!-- Launch RViz with the demo configuration -->
+<node name="rviz" pkg="rviz" type="rviz"
+    args="-d $(find librrtserver_ros)/rviz/mockamap.rviz"/>
+
+</launch>

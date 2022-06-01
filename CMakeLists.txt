@@ -12,6 +12,7 @@ find_package(catkin
 )
 
 find_package(Eigen3 REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common filters kdtree)
 
 catkin_package(
   CATKIN_DEPENDS  
@@ -27,7 +28,9 @@ include_directories(
     include
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS} 
+    ${PCL_INCLUDE_DIRS}
 )
+link_directories(${PCL_LIBRARY_DIRS})
 
 add_subdirectory(librrtserver)
 
@@ -35,6 +38,9 @@ add_executable(${PROJECT_NAME}_node
     src/main.cpp
     src/server_ros.cpp
 )
+
+target_link_libraries(${PROJECT_NAME}_node 
+    ${PCL_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

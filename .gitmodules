@@ -1,3 +1,6 @@
 [submodule "librrtserver"]
 	path = librrtserver
 	url = https://github.com/matthewoots/librrtserver.git
+[submodule "mockamap"]
+	path = mockamap
+	url = https://github.com/HKUST-Aerial-Robotics/mockamap.git
