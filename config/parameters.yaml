@@ -1,10 +1,32 @@
-runtime_error: 0.1
+runtime_error: 0.12
 sub_runtime_error: 0.02
 search_radius: 12.0
 threshold: 0.40
-search_interval: 2.0
+search_interval: 0.2
 
-start_position: [-3, -2, 1.0]
-end_position: [20.0, 0.0, 4.0]
-local_map_size_xyz: [10.0, 10.0, 10.0]
-height: [1.0, 4.0]
+# Backward path
+# start_position: [25.0, 4.0, 4.0]
+# end_position: [-6, 4, 4.0]
+
+# Forward path
+# end_position: [22.0, 6.0, 4.0]
+# start_position: [-3, 6, 1.0]
+
+# Much longer path 1
+# end_position: [22.0, 6.0, 4.0]
+# start_position: [-30, 0.0, 3.0]
+
+# Much longer path 2
+end_position: [22.0, -1.0, 4.0]
+start_position: [-30, 0.0, 3.0]
+
+# Right to Left path
+# end_position: [0.0, 10.0, 4.0]
+# start_position: [0, -25, 1.0]
+
+# Left to right path
+# end_position: [0.0, -25.0, 4.0]
+# start_position: [0, 10, 1.0]
+
+local_map_size_xyz: [15.0, 15.0, 15.0]
+height: [0.0, 4.0]

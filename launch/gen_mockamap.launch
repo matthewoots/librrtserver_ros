@@ -2,7 +2,7 @@
 
 <node pkg="mockamap" type="mockamap_node" name="mockamap_node" output="screen">
   <param name="seed" type="int" value="511"/>
-  <param name="update_freq" type="double" value="1.0"/>
+  <param name="update_freq" type="double" value="2.0"/>
 
   <!--  box edge length, unit meter-->
   <param name="resolution" type="double" value="0.25"/>
@@ -10,7 +10,7 @@
   <!-- map size unit meter-->
   <param name="x_length" type="int" value="50"/>
   <param name="y_length" type="int" value="50"/>
-  <param name="z_length" type="int" value="5"/>
+  <param name="z_length" type="int" value="6"/>
 
   <param name="type" type="int" value="1"/>
     <!-- 1 perlin noise parameters -->

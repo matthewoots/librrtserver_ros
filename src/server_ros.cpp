@@ -34,8 +34,11 @@ using namespace rrt_server;
 void rrt_server_ros::pcl2_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
     full_cloud = pcl2_converter(*msg);
+
     std::lock_guard<std::mutex> cloud_lock(cloud_mutex);
-    local_cloud = ru.pcl_ptr_box_crop(full_cloud, start, _local_map_size_xyz);
+    std::lock_guard<std::mutex> pose_lock(pose_update_mutex);
+
+    local_cloud = ru.pcl_ptr_box_crop(full_cloud, current_control_point, _local_map_size_xyz);
     last_pcl_msg = ros::Time::now();
     local_pcl_pub.publish(local_cloud);
     return;
@@ -43,12 +46,14 @@ void rrt_server_ros::pcl2_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 
 void rrt_server_ros::extract_direct_goal(pcl::PointCloud<pcl::PointXYZ>::Ptr obs)
 {
+    std::lock_guard<std::mutex> pose_lock(pose_update_mutex);
+
     double radii;
     // If end goal is inside the search sphere
-    if ((end - current_control_point).norm() < search_radius)
-        radii = (end - current_control_point).norm();
+    // if ((end - current_control_point).norm() < search_radius)
+    //     radii = (end - current_control_point).norm();
     // If end goal is outside the search sphere
-    else
+    // else
         radii = search_radius;
 
     // Find a RRT path that is quick and stretches to the end point
@@ -61,6 +66,7 @@ void rrt_server_ros::extract_direct_goal(pcl::PointCloud<pcl::PointXYZ>::Ptr obs
     }
 
     // Save global_path
+    global_search_path.clear();
     global_search_path = path;
 
     // Find the intersection between any of the legs and the sphere perimeter
@@ -195,7 +201,7 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
     // generate_search_path(local_cloud);
     // ros::Duration local_time = ros::Time::now() - local_start_time;
 
-    nav_msgs::Path local_path = vector_3d_to_path(previous_search_points);
+    // nav_msgs::Path local_path = vector_3d_to_path(previous_search_points);
     nav_msgs::Path global_path = vector_3d_to_path(global_search_path);
 
     std::cout << "[server_ros] global_time " << 
@@ -210,7 +216,21 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
     object_msg.header.frame_id = "world";
     
 
-    l_rrt_points_pub.publish(local_path);
+    // l_rrt_points_pub.publish(local_path);
     g_rrt_points_pub.publish(global_path);
     debug_pcl_pub.publish(object_msg);
+
+    // Project the point forward
+    Eigen::Vector3d global_vector = global_search_path[1] - global_search_path[0];
+    global_vector = global_vector / global_vector.norm();
+    current_control_point += global_vector * 1;
+    std::cout << "current_control_point [" << KBLU << 
+        current_control_point.transpose() << "]" << KNRM << std::endl;
+    
+    geometry_msgs::PoseStamped pose;
+    pose.header.frame_id = "world";
+    pose.pose.position.x = current_control_point.x();
+    pose.pose.position.y = current_control_point.y();
+    pose.pose.position.z = current_control_point.z();
+    pose_pub.publish(pose);
 }
