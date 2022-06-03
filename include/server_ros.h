@@ -69,7 +69,7 @@ class rrt_server_ros
 
         ros::NodeHandle _nh;
         ros::Subscriber pcl2_msg_sub;
-        ros::Publisher local_pcl_pub, l_rrt_points_pub, g_rrt_points_pub;
+        ros::Publisher local_pcl_pub, g_rrt_points_pub;
         ros::Publisher pose_pub, debug_pcl_pub, debug_position_pub;
 
         double _runtime_error, _sub_runtime_error, _search_interval;
@@ -143,7 +143,6 @@ class rrt_server_ros
             /** @brief For debug */
             local_pcl_pub = _nh.advertise<sensor_msgs::PointCloud2>("/local_map", 10);
             pose_pub = _nh.advertise<geometry_msgs::PoseStamped>("/pose", 10);
-            l_rrt_points_pub = _nh.advertise<nav_msgs::Path>("/rrt_points_local", 10);
             g_rrt_points_pub = _nh.advertise<nav_msgs::Path>("/rrt_points_global", 10);
             debug_pcl_pub = _nh.advertise<sensor_msgs::PointCloud2>("/debug_map", 10);
             debug_position_pub = _nh.advertise

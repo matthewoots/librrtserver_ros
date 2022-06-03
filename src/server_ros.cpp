@@ -121,29 +121,20 @@ void rrt_server_ros::extract_direct_goal(pcl::PointCloud<pcl::PointXYZ>::Ptr obs
 
     direct_goal = query1;
 
+    // Save previous path
+    previous_search_points.clear();
+    for (int i = 1; i < (int)path.size(); i++)
+    {
+        if (intersection_idx-1 == i)
+        {
+            previous_search_points.push_back(query1);
+            break;
+        }
+        previous_search_points.push_back(path[i]);
+    }
+
     return; 
 
-}
-
-void rrt_server_ros::generate_search_path(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr obs_pcl)
-{
-    // check previous search points and create an updated one
-    // We moved forward, so find the closes point from current pose
-    check_and_update_search(obs_pcl);
-
-    vector<Eigen::Vector3d> path = fe_rrt_server.find_rrt_path(
-        previous_search_points, obs_pcl, current_control_point, 
-        direct_goal, search_radius / 2);
-
-    std::lock_guard<std::mutex> search_points_lock(search_points_mutex);
-    if (path.empty())
-        return;
-    
-    previous_search_points.clear();
-    previous_search_points = path;
-
-    return;
 }
 
 void rrt_server_ros::check_and_update_search(
@@ -173,21 +164,21 @@ void rrt_server_ros::check_and_update_search(
             previous_search_points.erase(previous_search_points.end());
     }
 
-    int new_size = (int)previous_search_points.size();
-    double nearest_distance = DBL_MAX;
-    int idx = -1; 
-    for (int i = 0; i < new_size; i++)
-    {
-        double distance = (previous_search_points[i]-current_control_point).norm();
-        if (distance < nearest_distance)
-        {
-            nearest_distance = distance;
-            idx = i;
-        }
-    }
+    // int new_size = (int)previous_search_points.size();
+    // double nearest_distance = DBL_MAX;
+    // int idx = -1; 
+    // for (int i = 0; i < new_size; i++)
+    // {
+    //     double distance = (previous_search_points[i]-current_control_point).norm();
+    //     if (distance < nearest_distance)
+    //     {
+    //         nearest_distance = distance;
+    //         idx = i;
+    //     }
+    // }
 
-    for (int i = idx-1; i >= 0; i--)
-        previous_search_points.erase(previous_search_points.begin());
+    // for (int i = idx-1; i >= 0; i--)
+    //     previous_search_points.erase(previous_search_points.begin());
 }
 
 void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
@@ -202,21 +193,16 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
         min_height, max_height, obs_threshold,
         _sub_runtime_error, _runtime_error);
 
+    check_and_update_search(local_cloud);
+
     ros::Time global_start_time = ros::Time::now();
     extract_direct_goal(local_cloud);
     ros::Duration global_time = ros::Time::now() - global_start_time;
-
-    // ros::Time local_start_time = ros::Time::now();
-    // generate_search_path(local_cloud);
-    // ros::Duration local_time = ros::Time::now() - local_start_time;
-
-    // nav_msgs::Path local_path = vector_3d_to_path(previous_search_points);
+    
     nav_msgs::Path global_path = vector_3d_to_path(global_search_path);
 
     std::cout << "[server_ros] global_time " << 
         KGRN << global_time.toSec() << KNRM << "s" << std::endl;
-    // std::cout << "[server_ros] local_time " <<
-    //     KGRN << local_time.toSec()  << KNRM << "s" << std::endl;
 
     sensor_msgs::PointCloud2 object_msg;
     pcl::PointCloud<pcl::PointXYZ>::Ptr object_cloud;
@@ -224,8 +210,6 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
     pcl::toROSMsg(*object_cloud.get(), object_msg);
     object_msg.header.frame_id = "world";
     
-
-    // l_rrt_points_pub.publish(local_path);
     g_rrt_points_pub.publish(global_path);
     debug_pcl_pub.publish(object_msg);
 
