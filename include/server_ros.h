@@ -24,6 +24,7 @@
 #include <thread>   
 #include <mutex>
 #include <iostream>
+#include <iostream>
 #include <math.h>
 #include <random>
 #include <Eigen/Dense>
@@ -40,6 +41,8 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
+
+#include <visualization_msgs/Marker.h>
 
 #include <tf/tf.h>
 
@@ -67,7 +70,7 @@ class rrt_server_ros
         ros::NodeHandle _nh;
         ros::Subscriber pcl2_msg_sub;
         ros::Publisher local_pcl_pub, l_rrt_points_pub, g_rrt_points_pub;
-        ros::Publisher pose_pub, debug_pcl_pub;
+        ros::Publisher pose_pub, debug_pcl_pub, debug_position_pub;
 
         double _runtime_error, _sub_runtime_error, _search_interval;
         double min_height, max_height;
@@ -84,6 +87,8 @@ class rrt_server_ros
         vector<Eigen::Vector3d> global_search_path;
 
         vector<Eigen::Vector4d> no_fly_zone;
+
+        Eigen::Vector4d color;
 
         ros::Time last_pcl_msg;
 
@@ -141,11 +146,20 @@ class rrt_server_ros
             l_rrt_points_pub = _nh.advertise<nav_msgs::Path>("/rrt_points_local", 10);
             g_rrt_points_pub = _nh.advertise<nav_msgs::Path>("/rrt_points_global", 10);
             debug_pcl_pub = _nh.advertise<sensor_msgs::PointCloud2>("/debug_map", 10);
+            debug_position_pub = _nh.advertise
+                <visualization_msgs::Marker>("/debug_points", 10);
 
             /** @brief Timer that when to search */
 		    search_timer = _nh.createTimer(
                 ros::Duration(_search_interval), 
                 &rrt_server_ros::run_search_timer, this, false, false);
+
+            // Choose a color for the trajectory using random values
+            std::random_device dev;
+            std:mt19937 generator(dev());
+            std::uniform_real_distribution<double> dis(0.0, 1.0);
+            color = Eigen::Vector4d(dis(generator), dis(generator), dis(generator), 0.5);
+
 
             current_control_point = start;
             search_timer.start();
@@ -180,6 +194,9 @@ class rrt_server_ros
             double b = 1.0; 
             double inv_a2 = 1 / a / a; 
             double inv_b2 = 1 / b / b; 
+
+            if ((sphere_center - point).norm() < 0.0001)
+                return true;
             // get the ellipsoidal distance 
             double e_d = sqrt(pow(dv.z(),2) * inv_a2 + 
                 (pow(dv.x(),2) + pow(dv.y(),2)) * inv_b2); 
@@ -206,6 +223,52 @@ class rrt_server_ros
             }
 
             return path;
+        }
+
+        void visualize_points(double scale_small, double scale_big)
+        {
+            visualization_msgs::Marker sphere_points, search;
+            sphere_points.header.frame_id = search.header.frame_id = "world";
+            sphere_points.header.stamp = search.header.stamp = ros::Time::now();
+            sphere_points.type = visualization_msgs::Marker::SPHERE;
+            search.type = visualization_msgs::Marker::SPHERE;
+            sphere_points.action = search.action = visualization_msgs::Marker::ADD;
+
+            sphere_points.id = 0;
+            search.id = 1;
+
+            sphere_points.pose.orientation.w = search.pose.orientation.w = 1.0;
+            sphere_points.color.r = search.color.g = color(0);
+            sphere_points.color.g = search.color.r = color(1);
+            sphere_points.color.b = search.color.b = color(2);
+
+            sphere_points.color.a = color(3);
+            search.color.a = 0.1;
+
+            sphere_points.scale.x = scale_small;
+            sphere_points.scale.y = scale_small;
+            sphere_points.scale.z = scale_small;
+
+            search.scale.x = scale_big;
+            search.scale.y = scale_big;
+            search.scale.z = scale_big;
+            
+            geometry_msgs::Point pt;
+            pt.x = direct_goal[0];
+            pt.y = direct_goal[1];
+            pt.z = direct_goal[2];
+
+            geometry_msgs::Point ctr;
+            ctr.x = current_control_point[0];
+            ctr.y = current_control_point[1];
+            ctr.z = current_control_point[2];
+
+            sphere_points.pose.position = pt;
+            search.pose.position = ctr;
+
+            debug_position_pub.publish(sphere_points);
+            debug_position_pub.publish(search);
+
         }
         
 };

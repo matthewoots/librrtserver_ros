@@ -3,8 +3,7 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Pose1
+      Expanded: ~
       Splitter Ratio: 0.46109509468078613
     Tree Height: 549
   - Class: rviz/Selection
@@ -213,6 +212,14 @@ Visualization Manager:
       Shape: Axes
       Topic: /pose
       Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /debug_points
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:

@@ -1,8 +1,8 @@
 runtime_error: 0.12
 sub_runtime_error: 0.02
 search_radius: 12.0
-threshold: 0.40
-search_interval: 0.2
+threshold: 0.2
+search_interval: 0.12
 
 # Backward path
 # start_position: [25.0, 4.0, 4.0]
@@ -20,6 +20,10 @@ search_interval: 0.2
 end_position: [22.0, -1.0, 4.0]
 start_position: [-30, 0.0, 3.0]
 
+# Wall path
+# end_position: [-5.0, 15.0, 4.0]
+# start_position: [-10, -15, 1.0]
+
 # Right to Left path
 # end_position: [0.0, 10.0, 4.0]
 # start_position: [0, -25, 1.0]
@@ -29,4 +33,4 @@ start_position: [-30, 0.0, 3.0]
 # start_position: [0, 10, 1.0]
 
 local_map_size_xyz: [15.0, 15.0, 15.0]
-height: [0.0, 4.0]
+height: [1.00, 4.0]

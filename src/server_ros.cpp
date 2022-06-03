@@ -70,50 +70,59 @@ void rrt_server_ros::extract_direct_goal(pcl::PointCloud<pcl::PointXYZ>::Ptr obs
     global_search_path = path;
 
     // Find the intersection between any of the legs and the sphere perimeter
-    int failed_counts = 0;
-    int intersection_idx;
-    for (int i = 1; i < (int)path.size(); i++)
+    int intersection_idx = -1;
+    for (int i = 0; i < (int)path.size()-1; i++)
     {
         // outside : previous_search_points[i]
         // inside : previous_search_points[i-1]
-        if (inside_sphere_check(path[i-1], current_control_point, search_radius) &&
-            !inside_sphere_check(path[i], current_control_point, search_radius))
+        if (inside_sphere_check(path[i], current_control_point, search_radius) &&
+            !inside_sphere_check(path[i+1], current_control_point, search_radius))
         {
-            intersection_idx = i;
+            intersection_idx = i+1;
             break;
         }
-        failed_counts++;
     }
 
+    /** @brief Print intersection points wiht sphere */
+    // std::cout << "start and end path check [" << intersection_idx-1 <<
+    //     " and " << intersection_idx << "] out of " <<
+    //     path.size() << std::endl;
+
     // We have reached the goal if failed counts is same as path size
-    if (failed_counts == path.size()-1)
+    if (intersection_idx < 0)
     {
         direct_goal = end;
         return;
     }
 
-    // Calculate the direct goal point from the intersection pair
-    // Find the intersection with the sphere
+    // direction is inside to outside
     Eigen::Vector3d vect1 = path[intersection_idx] - path[intersection_idx-1];
-    double vect1_norm = vect1.norm();
-    Eigen::Vector3d vect2 = current_control_point - path[intersection_idx-1];
-    double vect2_norm = vect2.norm();
-    double dot = vect1.x()*vect2.x() + vect1.y()*vect2.y() + vect1.z()*vect2.z();
-    double extension = dot / vect1_norm;
-    double direct_distance_from_start;
-    if (extension <= 0.00001 && extension >= -0.00001)
-    {
-        double nearest_dist = sqrt(pow(vect2_norm,2) - pow(extension,2));
-        double sub_distance = sqrt(pow(radii,2) - pow(nearest_dist,2)); 
-        direct_distance_from_start = sub_distance + extension;
-    }
-    else
-    {
-        direct_distance_from_start = sqrt(pow(radii,2) - pow(extension,2)); 
-    }
+    Eigen::Vector3d vect1_direction = vect1 / vect1.norm();
+    // direction is center to inside
+    Eigen::Vector3d vect2 = path[intersection_idx-1] - current_control_point;
+    double a = pow(vect1.x(), 2) + pow(vect1.y(), 2) + pow(vect1.z(), 2);
+    double b = 2 * (vect1.x() * vect2.x() + 
+        vect1.y() * vect2.y() + 
+        vect1.z() * vect2.z());
+    double c = pow(current_control_point.x(), 2) +
+        pow(current_control_point.y(), 2) +
+        pow(current_control_point.z(), 2) +
+        pow(path[intersection_idx-1].x(), 2) +
+        pow(path[intersection_idx-1].y(), 2) +
+        pow(path[intersection_idx-1].z(), 2) -
+        2 * (path[intersection_idx-1].x() * current_control_point.x() +
+        path[intersection_idx-1].y() * current_control_point.y() +
+        path[intersection_idx-1].z() * current_control_point.z()) -
+        pow(radii,2);
 
-    direct_goal = direct_distance_from_start * (vect1 / vect1_norm);
-    return;
+    double u_p = (-b + sqrt(pow(b,2) - 4 * a * c)) / (2 * a);
+
+    Eigen::Vector3d query1 = vect1 * u_p + path[intersection_idx-1];
+
+    direct_goal = query1;
+
+    return; 
+
 }
 
 void rrt_server_ros::generate_search_path(
@@ -223,7 +232,7 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
     // Project the point forward
     Eigen::Vector3d global_vector = global_search_path[1] - global_search_path[0];
     global_vector = global_vector / global_vector.norm();
-    current_control_point += global_vector * 1;
+    current_control_point += global_vector * 0.5;
     std::cout << "current_control_point [" << KBLU << 
         current_control_point.transpose() << "]" << KNRM << std::endl;
     
@@ -233,4 +242,6 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
     pose.pose.position.y = current_control_point.y();
     pose.pose.position.z = current_control_point.z();
     pose_pub.publish(pose);
+
+    visualize_points(0.5, search_radius*2);
 }
