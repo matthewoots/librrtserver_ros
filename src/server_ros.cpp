@@ -137,8 +137,11 @@ void rrt_server_ros::extract_direct_goal(pcl::PointCloud<pcl::PointXYZ>::Ptr obs
 
 }
 
+/** @brief Use this function wisely, since check and update may cause an infinite loop
+ * If a bad data is given to the rrt node and it cannot complete the validity check
+*/
 void rrt_server_ros::check_and_update_search(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr obs)
+    pcl::PointCloud<pcl::PointXYZ>::Ptr obs,  Eigen::Vector3d first_cp)
 {
     std::lock_guard<std::mutex> pose_lock(pose_update_mutex);
     std::lock_guard<std::mutex> search_points_lock(search_points_mutex);
@@ -146,12 +149,21 @@ void rrt_server_ros::check_and_update_search(
     if (previous_search_points.empty())
         return;
 
+    // Check to see whether the new control point and the previous inputs
+    // have any pointclouds lying inside
+    if (!ru.check_line_validity_with_pcl(
+        previous_search_points[0], first_cp, obs_threshold*2, obs))
+    {
+        previous_search_points.clear();
+        return;
+    }
+
     int last_safe_idx = -1;
     int initial_size = (int)previous_search_points.size();
     for (int i = 1; i < initial_size; i++)
     {
         if (!ru.check_line_validity_with_pcl(
-            previous_search_points[i], previous_search_points[i-1], obs_threshold, obs))
+            previous_search_points[i], previous_search_points[i-1], obs_threshold*2, obs))
         {
             last_safe_idx = i-1;
             break;
@@ -163,6 +175,9 @@ void rrt_server_ros::check_and_update_search(
         for (int i = last_safe_idx + 1; i < initial_size; i++)
             previous_search_points.erase(previous_search_points.end());
     }
+
+    std::cout << "[server_ros] previous_search_points.size(): " << 
+        KGRN << previous_search_points.size() << KNRM << std::endl;
 
     // int new_size = (int)previous_search_points.size();
     // double nearest_distance = DBL_MAX;
@@ -193,7 +208,7 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
         min_height, max_height, obs_threshold,
         _sub_runtime_error, _runtime_error);
 
-    check_and_update_search(local_cloud);
+    check_and_update_search(local_cloud, current_control_point);
 
     ros::Time global_start_time = ros::Time::now();
     extract_direct_goal(local_cloud);
@@ -228,4 +243,5 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
     pose_pub.publish(pose);
 
     visualize_points(0.5, search_radius*2);
+    std::cout << std::endl;
 }

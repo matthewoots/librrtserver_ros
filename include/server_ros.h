@@ -101,7 +101,8 @@ class rrt_server_ros
     
         void extract_direct_goal(pcl::PointCloud<pcl::PointXYZ>::Ptr obs);
 
-        void check_and_update_search(pcl::PointCloud<pcl::PointXYZ>::Ptr obs);
+        void check_and_update_search(
+            pcl::PointCloud<pcl::PointXYZ>::Ptr obs, Eigen::Vector3d first_cp);
 
         void generate_search_path(pcl::PointCloud<pcl::PointXYZ>::Ptr obs_pcl);
 
