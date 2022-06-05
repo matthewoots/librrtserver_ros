@@ -99,12 +99,12 @@ class rrt_server_ros
 
         void pcl2_callback(const sensor_msgs::PointCloud2ConstPtr& msg);
     
-        void extract_direct_goal(pcl::PointCloud<pcl::PointXYZ>::Ptr obs);
+        void extract_direct_goal();
 
         void check_and_update_search(
             pcl::PointCloud<pcl::PointXYZ>::Ptr obs, Eigen::Vector3d first_cp);
 
-        void generate_search_path(pcl::PointCloud<pcl::PointXYZ>::Ptr obs_pcl);
+        void generate_search_path(pcl::PointCloud<pcl::PointXYZ>::Ptr obs);
 
         void run_search_timer(const ros::TimerEvent &);
 

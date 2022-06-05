@@ -18,7 +18,7 @@ search_interval: 0.12
 
 # Much longer path 2
 end_position: [22.0, -1.0, 4.0]
-start_position: [-30, 0.0, 3.0]
+start_position: [-35, -3.0, 3.0]
 
 # Wall path
 # end_position: [-5.0, 15.0, 4.0]

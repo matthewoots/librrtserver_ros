@@ -3,7 +3,8 @@
 ## Installation
 `librrtserver_ros` serves a searching server on ROS using the `librrtserver` package and acts as a wrapper to pass data into the module.
 
-Search time is around `1ms` to `0.1s` including shortening of the searched path.
+Search time is around `1ms` to `0.08s` including shortening of the searched path.
+- Included the reuse of search paths without another random path being generated, this will affect smoothness and time optimality
 
 ![Alt Text](rrt_local_planning.gif)
 
