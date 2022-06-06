@@ -4,6 +4,10 @@ search_radius: 8.0
 threshold: 0.2
 search_interval: 0.12
 
+xybuffer: 1.0
+zbuffer: 4.0
+passage_size: 12.0
+
 # Backward path
 # start_position: [25.0, 4.0, 4.0]
 # end_position: [-6, 4, 4.0]

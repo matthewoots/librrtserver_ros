@@ -75,6 +75,7 @@ class rrt_server_ros
         double _runtime_error, _sub_runtime_error, _search_interval;
         double min_height, max_height;
         double search_radius, obs_threshold;
+        double _xybuffer, _zbuffer, _passage_size;
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr full_cloud;
         pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud;
@@ -117,7 +118,11 @@ class rrt_server_ros
             _nh.param<double>("sub_runtime_error", _sub_runtime_error, 0.02);  
             _nh.param<double>("search_radius", search_radius, 5.0);
             _nh.param<double>("threshold", obs_threshold, 0.5); 
-            _nh.param<double>("search_interval", _search_interval, 0.5); 
+            _nh.param<double>("search_interval", _search_interval, 0.5);
+
+            _nh.param<double>("xybuffer", _xybuffer, 1); 
+            _nh.param<double>("zbuffer", _zbuffer, 1); 
+            _nh.param<double>("passage_size", _passage_size, 1);  
 
             std::vector<double> start_list, end_list, local_map_size_list, height_list;
 
@@ -162,6 +167,7 @@ class rrt_server_ros
 
 
             current_control_point = start;
+            fe_rrt_server.setup_buffers(_xybuffer, _zbuffer, _passage_size);
             search_timer.start();
         }
 

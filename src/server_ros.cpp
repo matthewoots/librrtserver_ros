@@ -254,7 +254,7 @@ void rrt_server_ros::run_search_timer(const ros::TimerEvent &)
     nav_msgs::Path global_path = vector_3d_to_path(global_search_path);
 
     std::cout << "[server_ros] global_time " << 
-        KGRN << global_time.toSec() << KNRM << "s" << std::endl;
+        KGRN << global_time.toSec() * 1000 << KNRM << "ms" << std::endl;
 
     sensor_msgs::PointCloud2 object_msg;
     pcl::PointCloud<pcl::PointXYZ>::Ptr object_cloud;
